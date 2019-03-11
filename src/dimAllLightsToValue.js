@@ -1,11 +1,10 @@
-const brightness = args[0];
+const brightness = parseFloat(args[0]);
 
 if (!brightness) return;
 
 const devices = await Homey.devices.getDevices();
 const lights = _.filter(devices, device =>
     device.class === 'light' && _.indexOf(device.capabilities, 'dim') > -1);
-
 
 const dimLightTo = async (light) => {
     const isLightOn = light.capabilitiesObj.onoff.value;
