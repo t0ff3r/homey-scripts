@@ -6,7 +6,7 @@ const devices = await Homey.devices.getDevices();
 const lights = _.filter(devices, device =>
   device.class === 'light' && _.indexOf(device.capabilities, 'dim') > -1);
 
-const dimLightTo = async (light) => {
+const dimLight = async (light) => {
   const isLightOn = light.capabilitiesObj.onoff.value;
   const currentDim = light.capabilitiesObj.dim.value;
 
@@ -23,7 +23,7 @@ const dimLightTo = async (light) => {
 async function processLights(lights) {
   for (const light of lights) {
     try {
-      await dimLightTo(light);
+      await dimLight(light);
     } catch (err) {
       // Log this please
     }
