@@ -1,29 +1,58 @@
+async function wait(timeout) {
+  return new Promise(resolve => {
+    _.delay(function(text) {
+      resolve();
+    }, timeout);
+  });
+}
+
 const killLight = async light => {
-  const res = await Homey.devices.setCapabilityValue({
+  const isLightOn = light.capabilitiesObj.onoff.value;
+
+  if (!isLightOn) return;
+
+  await Homey.devices.setCapabilityValue({
     deviceId: light.id,
     capabilityId: 'onoff',
     value: false,
   });
-
-}
-
-const killZoneLights = async zone => {
-  const devices = await Homey.devices.getDevices();
-  const lights = _.filter(devices, device => {
-    return device.class === 'light' && device.zone === zone.id;
-  });
-
-  lights.map(killLight)
 };
 
-if (args[0] === undefined) return false;
+async function processLights(lights) {
+  for (const light of lights) {
+    await killLight(light);
+    await wait(500);
+  }
+}
 
-const splitArgs = _.split(args[0], ',');
-const ordered = _.map(splitArgs, zone => _.trim(zone));
+void (async function() {
+  try {
+    const rooms = args[0];
+    //const rooms = 'Yttergang,Toalett,Stue,Kjøkken';
 
-const zones = await Homey.zones.getZones();
-const orderedZones = _.filter(zones, zone => _.indexOf(ordered, zone.name.toLowerCase()) > -1);
+    if (!rooms) return;
 
-orderedZones.map(await killZoneLights);
+    const splitRooms = _.split(rooms, ',');
+    const ordered = _.map(splitRooms, zone => _.trim(zone.toLowerCase()));
+    const allZones = await Homey.zones.getZones();
+    const zones = _.filter(
+      allZones,
+      zone => _.indexOf(ordered, zone.name.toLowerCase()) > -1,
+    );
 
-return ordered;
+    let lights = [];
+    for (const zone of zones) {
+      const devices = await Homey.devices.getDevices();
+      lights = _.concat(
+        lights,
+        _.filter(devices, device => {
+          return device.class === 'light' && device.zone === zone.id;
+        }),
+      );
+    }
+
+    await processLights(lights);
+  } catch (err) {
+    console.error(err);
+  }
+})();
