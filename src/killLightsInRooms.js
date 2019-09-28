@@ -13,8 +13,8 @@ const killLight = async light => {
 
   await Homey.devices.setCapabilityValue({
     deviceId: light.id,
-    capabilityId: 'onoff',
-    value: false,
+    capabilityId: "onoff",
+    value: false
   });
 };
 
@@ -32,22 +32,22 @@ void (async function() {
 
     if (!rooms) return;
 
-    const splitRooms = _.split(rooms, ',');
+    const splitRooms = _.split(rooms, ",");
     const ordered = _.map(splitRooms, zone => _.trim(zone.toLowerCase()));
     const allZones = await Homey.zones.getZones();
     const zones = _.filter(
       allZones,
-      zone => _.indexOf(ordered, zone.name.toLowerCase()) > -1,
+      zone => _.indexOf(ordered, zone.name.toLowerCase()) > -1
     );
 
     let lights = [];
+    const devices = await Homey.devices.getDevices();
     for (const zone of zones) {
-      const devices = await Homey.devices.getDevices();
       lights = _.concat(
         lights,
         _.filter(devices, device => {
-          return device.class === 'light' && device.zone === zone.id;
-        }),
+          return device.class === "light" && device.zone === zone.id;
+        })
       );
     }
 
